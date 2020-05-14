@@ -1,3 +1,5 @@
 data.csv
+train.csv
+test.csv
 model.rds
 secrets.env

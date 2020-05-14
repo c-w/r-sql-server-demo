@@ -1,0 +1,38 @@
+trigger: none
+
+stages:
+
+- stage: Train
+  jobs:
+  - job: Train
+    steps:
+    - powershell: './scripts/install_r.ps1'
+      displayName: 'Install R'
+    - powershell: './scripts/query_to_csv.ps1 -InputFile ./src/fetch_training_data.sql -Password $(SQLSERVER_PASSWORD) -ServerInstance $(SQLSERVER_INSTANCE) -User $(SQLSERVER_USERNAME) -Database $(SQLSERVER_DATABASE) -OutputFile $(Build.ArtifactStagingDirectory)/train.csv -Variable ("Seed=$(RANDOM_SEED)", "Skip=0", "Take=$(NUM_ROWS_TRAIN)")'
+      displayName: 'Fetch training data'
+    - powershell: './scripts/query_to_csv.ps1 -InputFile ./src/fetch_training_data.sql -Password $(SQLSERVER_PASSWORD) -ServerInstance $(SQLSERVER_INSTANCE) -User $(SQLSERVER_USERNAME) -Database $(SQLSERVER_DATABASE) -OutputFile $(Build.ArtifactStagingDirectory)/test.csv -Variable ("Seed=$(RANDOM_SEED)", "Skip=$(NUM_ROWS_TRAIN)", "Take=$(NUM_ROWS_TEST)")'
+      displayName: 'Fetch validation data'
+    - powershell: 'Rscript ./src/train_model.r $(Build.ArtifactStagingDirectory)/train.csv $(Build.ArtifactStagingDirectory)/model.rds'
+      displayName: 'Train model'
+    - powershell: 'Rscript ./src/run_model_local.r $(Build.ArtifactStagingDirectory)/model.rds $(Build.ArtifactStagingDirectory)/test.csv'
+      displayName: 'Run model locally'
+    - powershell: 'az storage blob upload-batch --account-key $(SQLSERVER_STORAGE_ACCOUNT_KEY) --account-name $(SQLSERVER_STORAGE_ACCOUNT_NAME) --destination $(SQLSERVER_STORAGE_CONTAINER) --source $(Build.ArtifactStagingDirectory) --destination-path $(Build.BuildId)'
+      displayName: 'Archive model artifacts'
+    pool:
+      vmImage: 'windows-latest'
+
+- stage: Deploy
+  jobs:
+  - deployment: Deploy
+    environment: r-sql-server-demo
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+          - powershell: 'Invoke-Sqlcmd -InputFile ./src/deploy_model.sql -Password $(SQLSERVER_PASSWORD) -ServerInstance $(SQLSERVER_INSTANCE) -User $(SQLSERVER_USERNAME) -Database $(SQLSERVER_DATABASE) -Variable ("Container=$(SQLSERVER_STORAGE_CONTAINER)", "ModelId=$(Build.BuildId)/model.rds")'
+            displayName: 'Deploy model to SQL Server'
+          - powershell: 'Invoke-Sqlcmd -InputFile ./src/run_model_server.sql -Password $(SQLSERVER_PASSWORD) -ServerInstance $(SQLSERVER_INSTANCE) -User $(SQLSERVER_USERNAME) -Database $(SQLSERVER_DATABASE) -Variable ("ModelId=$(Build.BuildId)/model.rds", "Seed=$(RANDOM_SEED)", "Skip=$(NUM_ROWS_TRAIN)", "Take=$(NUM_ROWS_TEST)")'
+            displayName: 'Run model on SQL Server'
+    pool:
+      vmImage: 'windows-latest'
