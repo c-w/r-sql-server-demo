@@ -1,13 +1,14 @@
 param (
-  [Parameter(Mandatory=$true)][string]$storageAccount,
-  [Parameter(Mandatory=$true)][string]$storageKey,
   [Parameter(Mandatory=$true)][string]$masterKey,
   [Parameter(Mandatory=$true)][string]$password,
-  [Parameter(Mandatory=$true)][string]$serverInstance,
   [Parameter(Mandatory=$true)][string]$user,
+  [Parameter(Mandatory=$true)][string]$subscriptionId,
+  [Parameter(Mandatory=$true)][string]$name,
+  [string]$location = 'EastUS',
   [string]$modelsContainerName = 'models',
   [string]$backupContainerName = 'backup',
   [string]$sasPolicyName = 'sqlserver',
+  [string]$sasStart = '2020-01-01',
   [string]$sasExpiry = '2222-01-01',
   [int]$numRowsTrain = 1000000,
   [int]$numRowsTest = 50000,
@@ -18,6 +19,24 @@ $backupUrl = 'https://sqlmldoccontent.blob.core.windows.net/sqlml/NYCTaxi_Sample
 $database = 'NYCTaxi_Sample'
 $here = Split-Path -parent $PSCommandPath
 
+Push-Location "$here"
+
+terraform init
+
+terraform apply `
+  -var subscription_id=$subscriptionId `
+  -var location=$location `
+  -var name=$name `
+  -var user=$user `
+  -var password=$password `
+  -auto-approve
+
+$storageAccount = terraform output -no-color storage_account_name
+$storageKey = terraform output -no-color storage_account_key
+$serverInstance = terraform output -no-color server_fqdn
+
+Pop-Location
+
 az storage container create `
   --name $backupContainerName `
   --account-name $storageAccount `
@@ -25,6 +44,38 @@ az storage container create `
 
 az storage container create `
   --name $modelsContainerName `
+  --account-name $storageAccount `
+  --account-key $storageKey
+
+az storage container policy create `
+  --container-name $backupContainerName `
+  --name $sasPolicyName `
+  --start $sasStart `
+  --expiry $sasExpiry `
+  --permissions 'dlrw' `
+  --account-name $storageAccount `
+  --account-key $storageKey
+
+az storage container policy create `
+  --container-name $modelsContainerName `
+  --name $sasPolicyName `
+  --start $sasStart `
+  --expiry $sasExpiry `
+  --permissions 'dlrw' `
+  --account-name $storageAccount `
+  --account-key $storageKey
+
+$backupSAS = az storage container generate-sas `
+  --name $backupContainerName `
+  --policy-name $sasPolicyName `
+  --output 'tsv' `
+  --account-name $storageAccount `
+  --account-key $storageKey
+
+$modelSAS = az storage container generate-sas `
+  --name $modelsContainerName `
+  --policy-name $sasPolicyName `
+  --output 'tsv' `
   --account-name $storageAccount `
   --account-key $storageKey
 
@@ -50,36 +101,6 @@ while (
 ) {
   Start-Sleep -Seconds 5
 }
-
-az storage container policy create `
-  --container-name $backupContainerName `
-  --name $sasPolicyName `
-  --expiry $sasExpiry `
-  --permissions 'dlrw' `
-  --account-name $storageAccount `
-  --account-key $storageKey
-
-az storage container policy create `
-  --container-name $modelsContainerName `
-  --name $sasPolicyName `
-  --expiry $sasExpiry `
-  --permissions 'dlrw' `
-  --account-name $storageAccount `
-  --account-key $storageKey
-
-$backupSAS = az storage container generate-sas `
-  --name $backupContainerName `
-  --policy-name $sasPolicyName `
-  --output 'tsv' `
-  --account-name $storageAccount `
-  --account-key $storageKey
-
-$modelSAS = az storage container generate-sas `
-  --name $modelsContainerName `
-  --policy-name $sasPolicyName `
-  --output 'tsv' `
-  --account-name $storageAccount `
-  --account-key $storageKey
 
 function LoadSqlTemplate {
   # Invoke-Sqlcmd balks on variables where the value contains an equal sign

@@ -1,16 +1,14 @@
 # R SQL Server Demo
 
+This demo is adapted from the tutorial [R data analytics for SQL developers](https://docs.microsoft.com/en-us/sql/machine-learning/tutorials/sqldev-in-database-r-for-sql-developers).
+
 ## One-time set up
 
-1) [Create a SQL Server 2017 Enterprise instance](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sql/quickstart-sql-vm-create-portal) with R Services and SQL Server Authentication enabled.
+1) [Install the SQL Server PowerShell module](https://docs.microsoft.com/en-us/sql/powershell/download-sql-server-ps-module?view=sql-server-ver15), [install Terraform](https://www.terraform.io/downloads.html), [install the Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) and authenticate with Azure via `az login`.
 
-2) [Create an Azure Storage Account](https://docs.microsoft.com/en-us/azure/storage/common/storage-account-create).
+2) Set up the required Azure resources by executing `.\infrastructure\setup.ps1`.
 
-3) [Install the SQL Server PowerShell module](https://docs.microsoft.com/en-us/sql/powershell/download-sql-server-ps-module?view=sql-server-ver15).
-
-4) Set up the SQL Server instance by executing `infrastructure/setup.ps1`.
-
-5) Set up the Azure Pipeline with the variables listed in `secrets.env`.
+3) Set up the Azure Pipeline with the variables listed in `secrets.env`.
 
 ## Training, publishing and scoring a model
 

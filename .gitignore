@@ -3,3 +3,5 @@ train.csv
 test.csv
 model.rds
 secrets.env
+.terraform/
+*.tfstate*
