@@ -123,7 +123,7 @@ function LoadSqlTemplate {
 Invoke-Sqlcmd `
   -Query $(
     LoadSqlTemplate `
-      -InputFile "$here\setup_server.sql" `
+      -InputFile "$here/setup_server.sql" `
       -Variable @{
         StorageAccount=$storageAccount;
         BackupContainerName=$backupContainerName;
@@ -138,7 +138,7 @@ Invoke-Sqlcmd `
 Invoke-Sqlcmd `
   -Query $(
     LoadSqlTemplate `
-      -InputFile "$here\setup_database.sql" `
+      -InputFile "$here/setup_database.sql" `
       -Variable @{
         MasterKey=$masterKey;
         StorageAccount=$storageAccount;
@@ -151,14 +151,14 @@ Invoke-Sqlcmd `
   -Database $database
 
 Invoke-Sqlcmd `
-  -InputFile "$here\setup_predict.sql" `
+  -InputFile "$here/setup_predict.sql" `
   -Password $password `
   -ServerInstance $serverInstance `
   -User $user `
   -Database $database
 
 Set-Content `
-  -Path "$here\..\secrets.env" `
+  -Path "$here/../secrets.env" `
   -Value (
     "SQLSERVER_STORAGE_ACCOUNT_NAME=$storageAccount",
     "SQLSERVER_STORAGE_ACCOUNT_KEY=$storageKey",
