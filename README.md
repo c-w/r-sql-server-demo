@@ -1,5 +1,7 @@
 # R SQL Server Demo
 
+[![Build Status](https://clewolff.visualstudio.com/r-sql-server-demo/_apis/build/status/code_quality?branchName=master)](https://clewolff.visualstudio.com/r-sql-server-demo/_build/latest?definitionId=9&branchName=master)
+
 ## What's this?
 
 This repository is a demo project that shows how to train, deploy and run R machine learning models on SQL Server.
@@ -15,18 +17,16 @@ The repository is adapted from the tutorial [R data analytics for SQL developers
 
 2) Set up the required Azure resources by executing `./infrastructure/setup.ps1`.
 
-3) Set up the Azure Pipeline with the variables listed in `secrets.env`.
+3) Set up the [train_and_deploy pipeline](./pipelines/train_model.yml) with the variables listed in `secrets.env`.
 
 ## Training, publishing and scoring a model
 
-Run the pipeline linked below to:
+Run the [train_and_deploy pipeline](https://clewolff.visualstudio.com/r-sql-server-demo/_build/latest?definitionId=8&branchName=master) to:
 
 - Fetch training and validation data from SQL Server
 - Train a model and validate it locally on the Azure DevOps agent
 - Archive the model binary, training and validation data to Azure Storage
 - Wait for approval and then deploy the model to SQL Server and score it against production data
-
-[![Build Status](https://clewolff.visualstudio.com/r-sql-server-demo/_apis/build/status/train_and_deploy_model?branchName=master)](https://clewolff.visualstudio.com/r-sql-server-demo/_build/latest?definitionId=8&branchName=master)
 
 ## Troubleshooting
 
