@@ -1,0 +1,22 @@
+---
+
+trigger:
+  - master
+
+steps:
+  - pwsh: |
+      ./scripts/install_r.ps1
+    displayName: 'Install R'
+  - pwsh: |
+      ./scripts/install_linters.ps1
+    displayName: 'Install linters'
+  - pwsh: |
+      $lintErrors = Rscript -e "lintr::lint_dir()"
+      if ($lintErrors) {
+        Write-Output $lintErrors
+        Exit 1
+      }
+    displayName: 'Lint R'
+
+pool:
+  vmImage: 'windows-2019'
