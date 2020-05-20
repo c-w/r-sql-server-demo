@@ -11,6 +11,9 @@ steps:
       ./scripts/install_linters.ps1
     displayName: 'Install linters'
   - pwsh: |
+      python -m yamllint --strict .
+    displayName: 'Lint YAML'
+  - pwsh: |
       $lintErrors = Invoke-ScriptAnalyzer -Path . -Recurse
       if ($lintErrors) {
         Write-Output $lintErrors
