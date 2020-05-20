@@ -1,3 +1,5 @@
+#!/usr/bin/env pwsh
+
 param (
   [Parameter(Mandatory=$true)][string]$masterKey,
   [Parameter(Mandatory=$true)][string]$password,
