@@ -1,3 +1,4 @@
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingPlainTextForPassword', '', Justification='Pass-through')]
 param (
   [Parameter(Mandatory=$true)][string]$inputFile,
   [Parameter(Mandatory=$true)][string]$outputFile,

@@ -11,6 +11,13 @@ steps:
       ./scripts/install_linters.ps1
     displayName: 'Install linters'
   - pwsh: |
+      $lintErrors = Invoke-ScriptAnalyzer -Path . -Recurse
+      if ($lintErrors) {
+        Write-Output $lintErrors
+        Exit 1
+      }
+    displayName: 'Lint PowerShell'
+  - pwsh: |
       $lintErrors = Rscript -e "lintr::lint_dir()"
       if ($lintErrors) {
         Write-Output $lintErrors

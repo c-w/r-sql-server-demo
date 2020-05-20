@@ -1,5 +1,6 @@
 #!/usr/bin/env pwsh
 
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingPlainTextForPassword', '', Justification='Pass-through')]
 param (
   [Parameter(Mandatory=$true)][string]$masterKey,
   [Parameter(Mandatory=$true)][string]$password,

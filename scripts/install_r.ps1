@@ -1,3 +1,6 @@
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingWriteHost', '', Justification='AzDO agent integration')]
+param()
+
 if ([bool](Get-Command Rscript -ErrorAction SilentlyContinue))
 {
   Exit 0
